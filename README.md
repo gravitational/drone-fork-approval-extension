@@ -1,34 +1,51 @@
-# Drone Untrusted Build Approval
+# Drone Fork Approval Extension
 
-## Installation
+:electric_plug: Fork Approval is a simple [Drone Validation Extension](https://docs.drone.io/extensions/validation/)
+that ensures every PR that comes from a fork must have its Drone CI build
+approved before it will run.
 
-Create a shared secret:
+Perhaps you're worried about OSS contributors running crypto miners?
+Perhaps you'd like to use privileged containers in your PR pipeline?
+
+Fork Approval can help you do so safely!
+
+## Usage
+
+1. Create a shared secret:
 
 ```console
 $ DRONE_SECRET="$(openssl rand -base64 32)"
 ```
 
-
-Build the plugin:
-
-```
-$ docker build . drone-secret
-```
-
-Run the plugin:
+2. Run the container:
 
 ```console
-$ docker run -d \
-  --publish=3000:3000 \
-  --env=DRONE_SECRET
+$ docker run --detach \
   --restart=always \
-  --name=drone-approval
+  --publish=3080:80 \
+  --env=DRONE_SECRET \
+  --name=drone-approval \
+  wadells/drone-fork-approval-extension:0.1.0
 ```
 
-Update your [Drone server configuration](https://docs.drone.io/extensions/validation/)
+
+3. Update your [Drone server configuration](https://docs.drone.io/extensions/validation/)
 to include the plugin address and the shared secret.
 
 ```text
-DRONE_VALIDATE_PLUGIN_ENDPOINT=https://<your plugin host>:3000
+DRONE_VALIDATE_PLUGIN_ENDPOINT=https://<your plugin host>:3080
 DRONE_VALIDATE_PLUGIN_SECRET=<your secret>
 ```
+
+### Caveats
+`wadells/drone-fork-approval-extension` does not publish a `:latest` tag.
+Choose a fixed version, or better yet, build and host a copy.  Relying
+on a 3rd party image repository for security of CI is not a great idea.
+
+This extension does not support HTTPS in its go configuration. Please
+put it behind [nginx](https://nginx.org/en/) or host the extension
+on the same system that hosts your main drone server.
+
+## Development
+
+Run `make help` for a list of targets.

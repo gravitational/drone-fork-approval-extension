@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"net/http"
+	"os"
+	"strings"
 
 	"github.com/drone/drone-go/plugin/validator"
 
@@ -40,6 +42,12 @@ func (p *plugin) Validate(ctx context.Context, req *validator.Request) error {
 	}
 }
 
+// version and commit allow injection of version info via -ldflags
+var (
+	version = "unknown"
+	commit  = "unknown"
+)
+
 // config contains all configuration as environment variables
 type config struct {
 	Bind   string `envconfig:"DRONE_BIND"`
@@ -48,6 +56,16 @@ type config struct {
 }
 
 func main() {
+	if len(os.Args) > 1 {
+		if strings.Contains(os.Args[1], "version") {
+			log.Info("version:\t" + version)
+			log.Info("commit: \t" + commit)
+			return
+		} else {
+			log.Fatal("unexpected arguments: " + strings.Join(os.Args[1:], " "))
+		}
+	}
+
 	var cfg config
 	err := envconfig.Process("", &cfg)
 	if err != nil {
