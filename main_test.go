@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"testing"
-	"time"
 
 	"github.com/drone/drone-go/plugin/validator"
 )
@@ -83,16 +82,13 @@ import (
 //			Secret: "",
 //			Build: (*"github.com/drone/drone-go/drone.Build")(0xc000694d20),},}
 
-var request = validator.Request{}
-
 func TestForkPullRequest(t *testing.T) {
 	p := &plugin{}
-	ctx, _ := context.WithTimeout(context.Background(), 1*time.Second)
 	req := validator.Request{}
 	req.Build.Event = "pull_request"
 	req.Build.Fork = "wadells/drone-external-auth-test"
 	req.Repo.Slug = "danger-della/drone-external-auth-test"
-	err := p.Validate(ctx, &req)
+	err := p.Validate(context.Background(), &req)
 	if err != validator.ErrBlock {
 		t.Fatal("expected PR from fork to be blocked")
 	}
@@ -100,12 +96,11 @@ func TestForkPullRequest(t *testing.T) {
 
 func TestSameRepoPullRequest(t *testing.T) {
 	p := &plugin{}
-	ctx, _ := context.WithTimeout(context.Background(), 1*time.Second)
 	req := validator.Request{}
 	req.Build.Event = "pull_request"
 	req.Build.Fork = "danger-della/drone-external-auth-test"
 	req.Repo.Slug = "danger-della/drone-external-auth-test"
-	err := p.Validate(ctx, &req)
+	err := p.Validate(context.Background(), &req)
 	if err != nil {
 		t.Fatal("expected PR from the same repo to be approved")
 	}
@@ -113,10 +108,9 @@ func TestSameRepoPullRequest(t *testing.T) {
 
 func TestUnknownEvent(t *testing.T) {
 	p := &plugin{}
-	ctx, _ := context.WithTimeout(context.Background(), 1*time.Second)
 	req := validator.Request{}
 	req.Build.Event = "merge_request"
-	err := p.Validate(ctx, &req)
+	err := p.Validate(context.Background(), &req)
 	if err != validator.ErrBlock {
 		t.Fatal("expected build with unknown Event be blocked")
 	}

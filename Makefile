@@ -49,6 +49,14 @@ $(OUT): $(GOSRC) $(MAKEFILE)
 test: ## Run tests.
 	go test -race ./...
 
+.PHONY: lint
+lint: ## Run static analysis against the source code.
+	docker run $(DOCKER_NOROOT) --rm \
+		-v $(ROOTDIR):$(ROOTDIR) \
+		-w $(ROOTDIR) \
+		-e XDG_CACHE_HOME=/tmp \
+		golangci/golangci-lint:v1.35.2 golangci-lint run
+
 
 .PHONY: image
 image: ## Build docker image.
