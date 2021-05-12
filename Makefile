@@ -45,6 +45,10 @@ build: $(OUT)
 $(OUT): $(GOSRC) $(MAKEFILE)
 	go build $(LDFLAGS) -v -o $(OUT) $(ROOTDIR)
 
+.PHONY: test
+test: ## Run tests.
+	go test -race ./...
+
 
 .PHONY: image
 image: ## Build docker image.
@@ -60,7 +64,7 @@ build-in-container: $(GOSRC) $(MAKEFILE)
 		-v "$(ROOTDIR):/go/src/drone-fork-approval-extension" \
 		-w /go/src/drone-fork-approval-extension \
 		-e XDG_CACHE_HOME=/tmp \
-		golang:1.16 make build
+		golang:1.16 make test build
 
 .PHONY: release
 release: ## Build and tag the release image.
