@@ -1,5 +1,9 @@
 #!/bin/sh
-# get describe doesn't follow semver by default -- this script adjusts
+#
+# Copyright 2021 walt@javins.net
+# Use of this code is governed by the GNU GPLv3 found in the LICENSE file.
+#
+# git describe doesn't follow semver by default -- this script adjusts
 
 increment_patch() {
     # increment_patch returns x.y.(z+1) given valid x.y.z semver.

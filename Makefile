@@ -1,3 +1,5 @@
+# Copyright 2021 walt@javins.net
+# Use of this code is governed by the GNU GPLv3 found in the LICENSE file.
 MAKEFILE := $(abspath $(lastword $(MAKEFILE_LIST)))
 ROOTDIR := $(patsubst %/,%,$(dir $(MAKEFILE)))
 
