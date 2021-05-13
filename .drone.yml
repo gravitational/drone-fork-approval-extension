@@ -1,0 +1,79 @@
+---
+kind: pipeline
+type: kubernetes
+name: pr
+
+trigger:
+  event:
+  - pull_request
+
+steps:
+  - name: fetch tags
+    image: docker:git
+    commands:
+      - git fetch --tags
+  - name: lint
+    image: golangci/golangci-lint:v1.35.2
+    commands:
+      - golangci-lint run
+  - name: build
+    image: golang:1.16
+    commands:
+      - make build
+  - name: test
+    image: golang:1.16
+    commands:
+      - make test
+---
+kind: pipeline
+type: kubernetes
+name: publish
+
+trigger:
+  event:
+  - tag
+
+steps:
+  - name: fetch tags
+    image: docker:git
+    commands:
+      - git fetch --tags
+  - name: wait for docker
+    image: docker
+    commands:
+      - timeout 15s /bin/sh -c 'while [ ! -S /var/run/docker.sock ]; do sleep 1; done'
+      - docker version
+    volumes:
+      - name: dockersock
+        path: /var/run
+  - name: release
+    image: docker:git
+    environment:
+      USERNAME:
+        from_secret: QUAY_USERNAME
+      PASSWORD:
+        from_secret: QUAY_PASSWORD
+    commands:
+      - apk add --no-cache make
+      - docker login -u="$USERNAME" -p="$PASSWORD" quay.io
+      - make publish
+    volumes:
+      - name: dockersock
+        path: /var/run
+
+services:
+  - name: run docker daemon
+    image: docker:dind
+    privileged: true
+    volumes:
+      - name: dockersock
+        path: /var/run
+
+volumes:
+  - name: dockersock
+    temp: {}
+---
+kind: signature
+hmac: df754b0345099f8e6e880778306c127e6cffe20ffb605ea38d929f5b947c6fce
+
+...
