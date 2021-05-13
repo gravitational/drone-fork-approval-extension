@@ -25,7 +25,7 @@ $ docker run --detach \
   --publish=3080:80 \
   --env=DRONE_SECRET \
   --name=drone-approval \
-  wadells/drone-fork-approval-extension:0.1.0
+  quay.io/gravitational/drone-fork-approval-extension:0.1.0
 ```
 
 
@@ -38,9 +38,8 @@ DRONE_VALIDATE_PLUGIN_SECRET=<your secret>
 ```
 
 ### Caveats
-`wadells/drone-fork-approval-extension` does not publish a `:latest` tag.
-Choose a fixed version, or better yet, build and host a copy.  Relying
-on a 3rd party image repository for security of CI is not a great idea.
+`gravitational/drone-fork-approval-extension` does not publish a `:latest` tag.
+Choose a fixed version.
 
 This extension does not support HTTPS in its go configuration. Please
 put it behind [nginx](https://nginx.org/en/) or host the extension

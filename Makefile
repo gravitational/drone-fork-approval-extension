@@ -33,7 +33,7 @@ DOCKER_NOROOT := -u $$(id -u):$$(id -g)
 # docker doesn't allow "+" in image tags: https://github.com/docker/distribution/issues/1201
 DOCKER_VERSION := $(subst +,-,$(VERSION))
 DOCKER_IID := $(BUILDDIR)/docker-$(DOCKER_VERSION).iid
-DOCKER_REPO := wadells/drone-fork-approval-extension
+DOCKER_REPO := quay.io/gravitational/drone-fork-approval-extension
 
 # kudos to https://gist.github.com/prwhite/8168133 for inspiration
 .PHONY: help

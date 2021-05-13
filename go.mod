@@ -1,4 +1,4 @@
-module github.com/wadells/drone-fork-approval-extension
+module github.com/gravitational/drone-fork-approval-extension
 
 go 1.12
 
