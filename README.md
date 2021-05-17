@@ -45,6 +45,35 @@ This extension does not support HTTPS in its go configuration. Please
 put it behind [nginx](https://nginx.org/en/) or host the extension
 on the same system that hosts your main drone server.
 
+This extension has only been tested with GitHub.
+
 ## Development
 
 Run `make help` for a list of targets.
+
+## Design
+
+Drone Fork Approval is intentionally limited in scope to keep its
+security implications understandable and limited. The entire approval
+workflow is summarized below:
+
+```text
+GitHub          Drone           Fork Approval
+ |    webhook    |               |
+ | ------------->|  .Validate()  |
+ |               | ------------->|
+                 |               | (source repo == target repo)? 200 : 499
+ (if 499, wait   |<------------- |
+  for approval)  |               |
+                 |
+Drone User       |
+ |   approval    |                      Drone Runner
+ | ------------->|                       |
+ |               | --------------------->|
+                 |                       | (execution begins)
+```
+
+For more information on the validation trigger logic, see:
+ * https://github.com/drone/drone/blob/v1.10.1/trigger/trigger.go#L238-L256
+ * https://github.com/drone/docs/blob/aea0b96ffbaebd5862a8439dd4e39ef57914d056/content/extensions/validation.md#response
+ * https://github.com/drone/drone-go/blob/v1.6.0/plugin/validator/client.go#L37-L48
