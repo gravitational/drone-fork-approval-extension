@@ -12,6 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 FROM gcr.io/distroless/base
-EXPOSE 80
+EXPOSE 3888
 ADD build/drone-fork-approval-extension /
 ENTRYPOINT ["/drone-fork-approval-extension"]
