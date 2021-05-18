@@ -22,18 +22,6 @@ service:
   type: ClusterIP
   port: 80
 
-ingress:
-  enabled: false
-  annotations: {}
-  hosts:
-    - host: drone-fork-approval-extension.local
-      paths:
-      - path: /
-        backend:
-          serviceName: drone-fork-approval-extension.local
-          servicePort: 80
-  tls: []
-
 resources: {}
 
 nodeSelector: {}
