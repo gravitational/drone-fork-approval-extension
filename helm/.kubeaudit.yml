@@ -1,0 +1,14 @@
+enabledAuditors:
+  apparmor: false
+  asat: true
+  capabilities: true
+  hostns: true
+  image: true
+  limits: true
+  mounts: true
+  netpols: true
+  nonroot: true
+  privesc: true
+  privileged: true
+  rootfs: true
+  seccomp: true
