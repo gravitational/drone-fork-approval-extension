@@ -29,7 +29,8 @@ GOSRC := $(shell find $(ROOTDIR) -type f -name '*.go') go.mod go.sum
 LDFLAGS=-ldflags "-X=main.version=$(VERSION) -X=main.commit=$(COMMIT)"
 
 DOCKERFILE := $(ROOTDIR)/Dockerfile
-DOCKER_NOROOT := -u $$(id -u):$$(id -g)
+# XDG_CACHE_HOME set to avoid permissions issues with root owned /.cache
+DOCKER_NOROOT := -u $$(id -u):$$(id -g) -e XDG_CACHE_HOME=/tmp
 # docker doesn't allow "+" in image tags: https://github.com/docker/distribution/issues/1201
 DOCKER_VERSION := $(subst +,-,$(VERSION))
 DOCKER_IID := $(BUILDDIR)/docker-$(DOCKER_VERSION).iid
@@ -65,7 +66,6 @@ lint: ## Run static analysis against the source code.
 	docker run $(DOCKER_NOROOT) --rm \
 		-v $(ROOTDIR):$(ROOTDIR) \
 		-w $(ROOTDIR) \
-		-e XDG_CACHE_HOME=/tmp \
 		golangci/golangci-lint:v1.35.2 golangci-lint run
 
 
@@ -82,7 +82,6 @@ build-in-container: $(GOSRC) $(MAKEFILE)
 	docker run $(DOCKER_NOROOT) --rm \
 		-v "$(ROOTDIR):/go/src/drone-fork-approval-extension" \
 		-w /go/src/drone-fork-approval-extension \
-		-e XDG_CACHE_HOME=/tmp \
 		golang:1.16 make test build
 
 .PHONY: release
