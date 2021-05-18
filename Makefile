@@ -15,7 +15,7 @@ MAKEFILE := $(abspath $(lastword $(MAKEFILE_LIST)))
 ROOTDIR := $(patsubst %/,%,$(dir $(MAKEFILE)))
 
 ifeq ($(origin VERSION), undefined)
-# avoid lazily evaluation (and thus rerunning the shell command several times)
+# avoid lazy evaluation (and thus rerunning the shell command several times)
 VERSION := $(shell ./version.sh)
 endif
 

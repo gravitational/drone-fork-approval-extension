@@ -112,7 +112,7 @@ func TestUnknownEvent(t *testing.T) {
 	req.Build.Event = "merge_request"
 	err := p.Validate(context.Background(), &req)
 	if err != validator.ErrBlock {
-		t.Fatal("expected build with unknown Event be blocked")
+		t.Fatal("expected build with unknown Event to be blocked")
 	}
 
 }

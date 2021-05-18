@@ -1,7 +1,7 @@
 # Drone Fork Approval Extension
 
 :electric_plug: Fork Approval is a simple [Drone Validation Extension](https://docs.drone.io/extensions/validation/)
-that ensures every PR that comes from a fork must have its Drone CI build
+that ensures every PR originating from a fork must have its Drone CI build
 approved before it will run.
 
 Perhaps you're worried about OSS contributors running crypto miners?
