@@ -22,7 +22,7 @@ $ DRONE_SECRET="$(openssl rand -base64 32)"
 ```console
 $ docker run --detach \
   --restart=always \
-  --publish=3080:80 \
+  --publish=3888:3888 \
   --env=DRONE_SECRET \
   --name=drone-approval \
   quay.io/gravitational/drone-fork-approval-extension:0.1.0
@@ -33,7 +33,7 @@ $ docker run --detach \
 to include the plugin address and the shared secret.
 
 ```text
-DRONE_VALIDATE_PLUGIN_ENDPOINT=https://<your plugin host>:3080
+DRONE_VALIDATE_PLUGIN_ENDPOINT=https://<your plugin host>:3888
 DRONE_VALIDATE_PLUGIN_SECRET=<your secret>
 ```
 

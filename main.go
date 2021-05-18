@@ -95,7 +95,7 @@ func main() {
 		log.Fatalln("missing DRONE_SECRET in environment")
 	}
 	if cfg.Bind == "" {
-		cfg.Bind = ":80"
+		cfg.Bind = ":3888"
 	}
 
 	handler := validator.Handler(
