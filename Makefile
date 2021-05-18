@@ -36,6 +36,9 @@ DOCKER_VERSION := $(subst +,-,$(VERSION))
 DOCKER_IID := $(BUILDDIR)/docker-$(DOCKER_VERSION).iid
 DOCKER_REPO := quay.io/gravitational/drone-fork-approval-extension
 
+HELMSRC := $(shell find helm -type f)
+KUBEAUDIT_OUT := $(BUILDDIR)/helm-rendered.yaml
+
 # kudos to https://gist.github.com/prwhite/8168133 for inspiration
 .PHONY: help
 help: ## Show this message.
@@ -63,6 +66,21 @@ test: ## Run tests.
 
 .PHONY: lint
 lint: ## Run static analysis against the source code.
+lint: lint-go lint-helm
+
+$(KUBEAUDIT_OUT): $(HELMSRC) Makefile
+	helm template -n drone drone-fork-approval-extension ./helm/drone-fork-approval-extension --set secret=A1234567890 > $(KUBEAUDIT_OUT)
+
+.PHONY: lint-helm
+lint-helm: ## Run kubeaudit against the rendered helm chart.
+lint-helm: $(KUBEAUDIT_OUT)
+	docker run $(DOCKER_NOROOT) --rm \
+		-v $(ROOTDIR):$(ROOTDIR) \
+		-w $(ROOTDIR) \
+		shopify/kubeaudit:v0.14.0 all -k helm/.kubeaudit.yml -f $(KUBEAUDIT_OUT)
+
+.PHONY: lint-go
+lint-go: ## Run golangci-lint against all go source.
 	docker run $(DOCKER_NOROOT) --rm \
 		-v $(ROOTDIR):$(ROOTDIR) \
 		-w $(ROOTDIR) \
