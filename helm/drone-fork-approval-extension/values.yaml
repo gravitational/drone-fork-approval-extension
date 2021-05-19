@@ -21,7 +21,13 @@ service:
   type: ClusterIP
   port: 3888
 
-resources: {}
+resources:
+  requests:
+    memory: "1Mi"
+    cpu: "1m"
+  limits:
+    memory: "10Mi"
+    cpu: "10m"
 
 nodeSelector: {}
 
