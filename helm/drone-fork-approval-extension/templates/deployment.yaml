@@ -44,7 +44,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: {{ include "drone-fork-approval-extension.fullname" . }}
-                  key: DRONE_SECRET
+                  key: DRONE_VALIDATE_PLUGIN_SECRET
           ports:
             - name: http
               containerPort: 3888
