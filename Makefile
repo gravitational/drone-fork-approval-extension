@@ -61,11 +61,14 @@ help: ## Show this message.
 clean: ## Remove build artifacts.
 	rm -rf $(BUILDDIR)
 
+$(BUILDDIR):
+	mkdir -p $(BUILDDIR)
+
 .PHONY: build
 build: ## Build the binary.
 build: $(OUT)
 
-$(OUT): $(GOSRC) $(MAKEFILE)
+$(OUT): $(GOSRC) $(MAKEFILE) | $(BUILDDIR)
 	go build $(LDFLAGS) -v -o $(OUT) $(ROOTDIR)
 
 .PHONY: test
@@ -80,7 +83,7 @@ $(KUBEAUDIT_IID): Makefile
 	docker pull $(KUBEAUDIT_IMAGE)
 	docker inspect --format='{{index .RepoDigests 0}}' $(KUBEAUDIT_IMAGE) > $(KUBEAUDIT_IID)
 
-$(KUBEAUDIT_OUT): $(HELMSRC) Makefile
+$(KUBEAUDIT_OUT): $(HELMSRC) Makefile | $(BUILDDIR)
 	helm template -n drone drone-fork-approval-plugin ./helm/drone-fork-approval-extension --set secret=A1234567890 > $(KUBEAUDIT_OUT)
 
 .PHONY: lint-helm
