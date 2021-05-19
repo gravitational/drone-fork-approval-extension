@@ -1,16 +1,19 @@
-1. Get the application URL by running these commands:
-{{- if contains "NodePort" .Values.service.type }}
-  export NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ include "drone-fork-approval-extension.fullname" . }})
-  export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
-  echo http://$NODE_IP:$NODE_PORT
-{{- else if contains "LoadBalancer" .Values.service.type }}
-     NOTE: It may take a few minutes for the LoadBalancer IP to be available.
-           You can watch the status of by running 'kubectl get --namespace {{ .Release.Namespace }} svc -w {{ include "drone-fork-approval-extension.fullname" . }}'
-  export SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ include "drone-fork-approval-extension.fullname" . }} --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}")
-  echo http://$SERVICE_IP:{{ .Values.service.port }}
-{{- else if contains "ClusterIP" .Values.service.type }}
-  export POD_NAME=$(kubectl get pods --namespace {{ .Release.Namespace }} -l "app.kubernetes.io/name={{ include "drone-fork-approval-extension.name" . }},app.kubernetes.io/instance={{ .Release.Name }}" -o jsonpath="{.items[0].metadata.name}")
-  export CONTAINER_PORT=$(kubectl get pod --namespace {{ .Release.Namespace }} $POD_NAME -o jsonpath="{.spec.containers[0].ports[0].containerPort}")
-  echo "Visit http://127.0.0.1:8080 to use your application"
-  kubectl --namespace {{ .Release.Namespace }} port-forward $POD_NAME 8080:$CONTAINER_PORT
-{{- end }}
+1. Check that the pods are up and running:
+
+$ kubectl logs -n {{ .Release.Namespace }} -l 'app.kubernetes.io/name={{ include "drone-fork-approval-extension.name" . }}'
+time="2021-05-15T04:58:14Z" level=info msg="server listening on address :3888"
+
+2. Update your Drone deployment to call this extension.
+   Add one of the following to the Drone helm values file,
+   and upgrade the deployment:
+
+env:
+  DRONE_VALIDATE_PLUGIN_SECRET: <the secret you selected>
+  DRONE_VALIDATE_PLUGIN_ENDPOINT: {{ printf "http://%v:%v" (include "drone-fork-approval-extension.fullname" . ) .Values.service.port }}
+
+OR
+
+extraSecretNamesForEnvFrom:
+  - {{ include "drone-fork-approval-extension.fullname" . }}
+podAnnotations:
+  checksum/{{ include "drone-fork-approval-extension.fullname" . }}: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
