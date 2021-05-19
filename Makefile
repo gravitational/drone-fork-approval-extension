@@ -33,10 +33,18 @@ DOCKERFILE := $(ROOTDIR)/Dockerfile
 DOCKER_NOROOT := -u $$(id -u):$$(id -g) -e XDG_CACHE_HOME=/tmp
 # docker doesn't allow "+" in image tags: https://github.com/docker/distribution/issues/1201
 DOCKER_VERSION := $(subst +,-,$(VERSION))
-DOCKER_IID := $(BUILDDIR)/docker-$(DOCKER_VERSION).iid
+RELEASE_IID := $(BUILDDIR)/release-$(DOCKER_VERSION).iid
 DOCKER_REPO := quay.io/gravitational/drone-fork-approval-extension
 
+DOCKERSUMDIR := $(ROOTDIR)/.dockersum
+GOBUILD_IMAGE  := golang:1.16
+GOBUILD_IID := $(DOCKERSUMDIR)/golang.iid
+GOLANGCILINT_IMAGE := golangci/golangci-lint:v1.35.2
+GOLANGCILINT_IID := $(DOCKERSUMDIR)/golangci-lint.iid
+
 HELMSRC := $(shell find helm -type f)
+KUBEAUDIT_IMAGE := shopify/kubeaudit:v0.14.0
+KUBEAUDIT_IID := $(DOCKERSUMDIR)/kubeaudit.iid
 KUBEAUDIT_OUT := $(BUILDDIR)/helm-rendered.yaml
 
 # kudos to https://gist.github.com/prwhite/8168133 for inspiration
@@ -68,45 +76,71 @@ test: ## Run tests.
 lint: ## Run static analysis against the source code.
 lint: lint-go lint-helm
 
+$(KUBEAUDIT_IID): Makefile
+	docker pull $(KUBEAUDIT_IMAGE)
+	docker inspect --format='{{index .RepoDigests 0}}' $(KUBEAUDIT_IMAGE) > $(KUBEAUDIT_IID)
+
 $(KUBEAUDIT_OUT): $(HELMSRC) Makefile
-	helm template -n drone drone-fork-approval-extension ./helm/drone-fork-approval-extension --set secret=A1234567890 > $(KUBEAUDIT_OUT)
+	helm template -n drone drone-fork-approval-plugin ./helm/drone-fork-approval-extension --set secret=A1234567890 > $(KUBEAUDIT_OUT)
 
 .PHONY: lint-helm
 lint-helm: ## Run kubeaudit against the rendered helm chart.
-lint-helm: $(KUBEAUDIT_OUT)
+lint-helm: $(KUBEAUDIT_IID) $(KUBEAUDIT_OUT)
 	docker run $(DOCKER_NOROOT) --rm \
 		-v $(ROOTDIR):$(ROOTDIR) \
 		-w $(ROOTDIR) \
-		shopify/kubeaudit:v0.14.0 all -k helm/.kubeaudit.yml -f $(KUBEAUDIT_OUT)
+		$$(cat $(KUBEAUDIT_IID)) all -k helm/.kubeaudit.yml -f $(KUBEAUDIT_OUT)
+
+$(GOLANGCILINT_IID): Makefile
+	docker pull $(GOLANGCILINT_IMAGE)
+	docker inspect --format='{{index .RepoDigests 0}}' $(GOLANGCILINT_IMAGE) > $(GOLANGCILINT_IID)
 
 .PHONY: lint-go
 lint-go: ## Run golangci-lint against all go source.
+lint-go: $(GOLANGCILINT_IID)
 	docker run $(DOCKER_NOROOT) --rm \
 		-v $(ROOTDIR):$(ROOTDIR) \
 		-w $(ROOTDIR) \
-		golangci/golangci-lint:v1.35.2 golangci-lint run
-
+		$$(cat $(GOLANGCILINT_IID)) golangci-lint run
 
 .PHONY: image
 image: ## Build docker image.
-image: $(DOCKER_IID)
+image: $(RELEASE_IID)
 
-$(DOCKER_IID): $(OUT) $(DOCKERFILE)
-	docker build $(ROOTDIR) --iidfile $(DOCKER_IID)
+$(RELEASE_IID): $(OUT) $(DOCKERFILE)
+	docker build $(ROOTDIR) --iidfile $(RELEASE_IID)
+
+$(GOBUILD_IID): Makefile
+	docker pull $(GOBUILD_IMAGE)
+	docker inspect --format='{{index .RepoDigests 0}}' $(GOBUILD_IMAGE) > $(GOBUILD_IID)
 
 .PHONY: build-in-container
 build-in-container: ## Build the binary in a container with a known go.
-build-in-container: $(GOSRC) $(MAKEFILE)
+build-in-container: $(GOSRC) $(GOBUILD_IID) $(MAKEFILE)
 	docker run $(DOCKER_NOROOT) --rm \
 		-v "$(ROOTDIR):/go/src/drone-fork-approval-extension" \
 		-w /go/src/drone-fork-approval-extension \
-		golang:1.16 make test build
+		-e XDG_CACHE_HOME=/tmp \
+		$$(cat $(GOBUILD_IID)) make build
+
+.PHONY: test-in-container
+test-in-container: ## Run tests in a container with a known go.
+test-in-container: $(GOSRC) $(GOBUILD_IID) $(MAKEFILE)
+	docker run $(DOCKER_NOROOT) --rm \
+		-v "$(ROOTDIR):/go/src/drone-fork-approval-extension" \
+		-w /go/src/drone-fork-approval-extension \
+		$$(cat $(GOBUILD_IID)) make test
+
+.PHONY: update-images
+update-images: ## Update docker images used for building and testing.
+	rm -rf $(DOCKERSUMDIR)
+	mkdir -p $(DOCKERSUMDIR)
+	$(MAKE) $(GOBUILD_IID) $(GOLANGCILINT_IID) $(KUBEAUDIT_IID)
 
 .PHONY: release
 release: ## Build and tag the release image.
-release: build-in-container $(DOCKER_IID)
-	docker tag "$$(cat $(DOCKER_IID))" $(DOCKER_REPO):$(DOCKER_VERSION)
-
+release: build-in-container test-in-container $(RELEASE_IID)
+	docker tag "$$(cat $(RELEASE_IID))" $(DOCKER_REPO):$(DOCKER_VERSION)
 
 .PHONY: publish
 publish: ## Publish release artifacts to docker repo.
