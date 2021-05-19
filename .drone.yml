@@ -12,18 +12,50 @@ steps:
     image: docker:git
     commands:
       - git fetch --tags
+  - name: wait for docker
+    image: docker
+    commands:
+      - timeout 15s /bin/sh -c 'while [ ! -S /var/run/docker.sock ]; do sleep 1; done'
+      - docker version
+    volumes:
+      - name: dockersock
+        path: /var/run
   - name: lint
-    image: golangci/golangci-lint:v1.35.2
+    image: docker:git
     commands:
-      - golangci-lint run
+      - apk add --no-cache make
+      - make lint
+    volumes:
+      - name: dockersock
+        path: /var/run
   - name: build
-    image: golang:1.16
+    image: docker:git
     commands:
-      - make build
+      - apk add --no-cache make
+      - make build-in-container
+    volumes:
+      - name: dockersock
+        path: /var/run
   - name: test
-    image: golang:1.16
+    image: docker:git
     commands:
-      - make test
+      - apk add --no-cache make
+      - make test-in-container
+    volumes:
+      - name: dockersock
+        path: /var/run
+
+services:
+  - name: run docker daemon
+    image: docker:dind
+    privileged: true
+    volumes:
+      - name: dockersock
+        path: /var/run
+
+volumes:
+  - name: dockersock
+    temp: {}
 ---
 kind: pipeline
 type: kubernetes
@@ -74,6 +106,6 @@ volumes:
     temp: {}
 ---
 kind: signature
-hmac: df754b0345099f8e6e880778306c127e6cffe20ffb605ea38d929f5b947c6fce
+hmac: 71c5d12ad0e26afb4d90b635c4c601181b8e00bb015b4a9ef32e535f237eccbb
 
 ...
