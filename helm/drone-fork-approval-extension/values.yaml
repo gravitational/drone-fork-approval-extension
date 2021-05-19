@@ -20,7 +20,7 @@ securityContext: {}
 
 service:
   type: ClusterIP
-  port: 80
+  port: 3888
 
 resources: {}
 

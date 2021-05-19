@@ -39,7 +39,7 @@ spec:
                   key: DRONE_SECRET
           ports:
             - name: http
-              containerPort: 80
+              containerPort: 3888
               protocol: TCP
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
