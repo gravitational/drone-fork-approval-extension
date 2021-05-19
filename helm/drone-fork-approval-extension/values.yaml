@@ -12,11 +12,10 @@ imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
 
-podAnnotations: {}
+podAnnotations:
+  seccomp.security.alpha.kubernetes.io/pod: runtime/default
 
 podSecurityContext: {}
-
-securityContext: {}
 
 service:
   type: ClusterIP
