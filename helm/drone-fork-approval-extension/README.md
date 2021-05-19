@@ -49,7 +49,7 @@ Check the logs to make sure there are no warnings or errors:
 
 ```console
 $ kubectl -n drone logs -l 'app.kubernetes.io/name=drone-fork-approval-extension'
-time="2021-05-15T04:58:14Z" level=info msg="server listening on address :80"
+time="2021-05-15T04:58:14Z" level=info msg="server listening on address :3888"
 ```
 
 If you see the "server listening on address" text above without error, the Fork Approval Extension is running.
@@ -63,7 +63,7 @@ matches the secret configured above.
 
 ```yaml
 env:
-  DRONE_VALIDATE_PLUGIN_ENDPOINT: http://drone-fork-approval-extension:80
+  DRONE_VALIDATE_PLUGIN_ENDPOINT: http://drone-fork-approval-extension:3888
   DRONE_VALIDATE_PLUGIN_SECRET: xxxxxxxxxxxxx
 ```
 
@@ -78,7 +78,7 @@ the Fork Approval Extension logs:
 
 ```console
 $ kubectl --namespace drone logs -l 'app.kubernetes.io/name=drone-fork-approval-extension'
-time="2021-05-15T04:58:14Z" level=info msg="server listening on address :80"
+time="2021-05-15T04:58:14Z" level=info msg="server listening on address :3888"
 time="2021-05-15T05:11:56Z" level=info msg="https://github.com/danger-della/drone-external-auth-test/pull/5 needs approval" source=wadells/drone-external-auth-test target=danger-della/drone-external-auth-test
 ```
 
