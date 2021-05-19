@@ -43,6 +43,8 @@ GOLANGCILINT_IMAGE := golangci/golangci-lint:v1.35.2
 GOLANGCILINT_IID := $(DOCKERSUMDIR)/golangci-lint.iid
 
 HELMSRC := $(shell find helm -type f)
+HELM_IMAGE := alpine/helm:3.5.4
+HELM_IID := $(DOCKERSUMDIR)/helm.iid
 KUBEAUDIT_IMAGE := shopify/kubeaudit:v0.14.0
 KUBEAUDIT_IID := $(DOCKERSUMDIR)/kubeaudit.iid
 KUBEAUDIT_OUT := $(BUILDDIR)/helm-rendered.yaml
@@ -79,12 +81,20 @@ test: ## Run tests.
 lint: ## Run static analysis against the source code.
 lint: lint-go lint-helm
 
+$(HELM_IID): Makefile
+	docker pull $(HELM_IMAGE)
+	docker inspect --format='{{index .RepoDigests 0}}' $(HELM_IMAGE) > $(HELM_IID)
+
+$(KUBEAUDIT_OUT): $(HELMSRC) $(HELM_IID) | $(BUILDDIR)
+	docker run $(DOCKER_NOROOT) --rm \
+		-v $(ROOTDIR):$(ROOTDIR) \
+		-w $(ROOTDIR) \
+		$$(cat $(HELM_IID)) \
+		template -n drone drone-fork-approval-plugin ./helm/drone-fork-approval-extension --set secret=A1234567890 > $(KUBEAUDIT_OUT)
+
 $(KUBEAUDIT_IID): Makefile
 	docker pull $(KUBEAUDIT_IMAGE)
 	docker inspect --format='{{index .RepoDigests 0}}' $(KUBEAUDIT_IMAGE) > $(KUBEAUDIT_IID)
-
-$(KUBEAUDIT_OUT): $(HELMSRC) Makefile | $(BUILDDIR)
-	helm template -n drone drone-fork-approval-plugin ./helm/drone-fork-approval-extension --set secret=A1234567890 > $(KUBEAUDIT_OUT)
 
 .PHONY: lint-helm
 lint-helm: ## Run kubeaudit against the rendered helm chart.
@@ -138,7 +148,7 @@ test-in-container: $(GOSRC) $(GOBUILD_IID) $(MAKEFILE)
 update-images: ## Update docker images used for building and testing.
 	rm -rf $(DOCKERSUMDIR)
 	mkdir -p $(DOCKERSUMDIR)
-	$(MAKE) $(GOBUILD_IID) $(GOLANGCILINT_IID) $(KUBEAUDIT_IID)
+	$(MAKE) $(GOBUILD_IID) $(GOLANGCILINT_IID) $(KUBEAUDIT_IID) $(HELM_IID)
 
 .PHONY: release
 release: ## Build and tag the release image.
