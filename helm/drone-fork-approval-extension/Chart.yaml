@@ -1,9 +1,9 @@
 apiVersion: v2
 name: drone-fork-approval-extension
 description: Drone Fork Approval Extension is a simple Drone Validation extension ensuring every PR from a fork must have its Drone CI build approved before it will run.
-version: 0.1.0
+version: 1.0.0
 type: application
-appVersion: "0.1.0"
+appVersion: "1.0.0"
 home: https://github.com/gravitational/drone-fork-approval-extension
 sources:
   - https://github.com/gravitational/drone-fork-approval-extension

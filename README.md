@@ -25,7 +25,7 @@ $ docker run --detach \
   --publish=3888:3888 \
   --env=DRONE_SECRET \
   --name=drone-approval \
-  quay.io/gravitational/drone-fork-approval-extension:0.1.0
+  quay.io/gravitational/drone-fork-approval-extension:1.0.0
 ```
 
 
